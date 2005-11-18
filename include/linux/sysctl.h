@@ -31,6 +31,7 @@
 #include <linux/list.h>
 
 struct file;
+struct completion;
 
 #define CTL_MAXNAME 10
 
@@ -851,6 +852,8 @@ struct ctl_table_header
 {
 	ctl_table *ctl_table;
 	struct list_head ctl_entry;
+	int used;
+	struct completion *unregistering;
 };
 
 struct ctl_table_header * register_sysctl_table(ctl_table * table, 
