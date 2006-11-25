@@ -2111,7 +2111,7 @@ static int fbcon_scrolldelta(struct vc_data *conp, int lines)
 
     offset = p->yscroll-scrollback_current;
     limit = p->vrows;
-    switch (p->scrollmode && __SCROLL_YMASK) {
+    switch (p->scrollmode & __SCROLL_YMASK) {
 	case __SCROLL_YWRAP:
 	    p->var.vmode |= FB_VMODE_YWRAP;
 	    break;
