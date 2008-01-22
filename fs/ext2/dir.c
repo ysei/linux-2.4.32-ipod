@@ -251,6 +251,7 @@ ext2_readdir (struct file * filp, void * dirent, filldir_t filldir)
 	unsigned chunk_mask = ~(ext2_chunk_size(inode)-1);
 	unsigned char *types = NULL;
 	int need_revalidate = (filp->f_version != inode->i_version);
+	int ret = 0;
 
 	if (pos > inode->i_size - EXT2_DIR_REC_LEN(1))
 		goto done;
@@ -263,8 +264,10 @@ ext2_readdir (struct file * filp, void * dirent, filldir_t filldir)
 		ext2_dirent *de;
 		struct page *page = ext2_get_page(inode, n, 0);
 
-		if (IS_ERR(page))
-			continue;
+		if (IS_ERR(page)) {
+			ret = -EIO;
+			goto done;
+		}
 		kaddr = page_address(page);
 		if (need_revalidate) {
 			offset = ext2_validate_entry(kaddr, offset, chunk_mask);
@@ -296,7 +299,7 @@ done:
 	filp->f_pos = (n << PAGE_CACHE_SHIFT) | offset;
 	filp->f_version = inode->i_version;
 	UPDATE_ATIME(inode);
-	return 0;
+	return ret;
 }
 
 /*
