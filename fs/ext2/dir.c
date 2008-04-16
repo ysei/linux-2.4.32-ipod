@@ -245,7 +245,7 @@ ext2_readdir (struct file * filp, void * dirent, filldir_t filldir)
 	loff_t pos = filp->f_pos;
 	struct inode *inode = filp->f_dentry->d_inode;
 	struct super_block *sb = inode->i_sb;
-	unsigned offset = pos & ~PAGE_CACHE_MASK;
+	unsigned int offset = pos & ~PAGE_CACHE_MASK;
 	unsigned long n = pos >> PAGE_CACHE_SHIFT;
 	unsigned long npages = dir_pages(inode);
 	unsigned chunk_mask = ~(ext2_chunk_size(inode)-1);
@@ -265,6 +265,10 @@ ext2_readdir (struct file * filp, void * dirent, filldir_t filldir)
 		struct page *page = ext2_get_page(inode, n, 0);
 
 		if (IS_ERR(page)) {
+			ext2_error(sb, __FUNCTION__,
+				   "bad page in #%lu",
+				   inode->i_ino);
+			filp->f_pos += PAGE_CACHE_SIZE - offset;
 			ret = -EIO;
 			goto done;
 		}
@@ -275,7 +279,7 @@ ext2_readdir (struct file * filp, void * dirent, filldir_t filldir)
 		}
 		de = (ext2_dirent *)(kaddr+offset);
 		limit = kaddr + PAGE_CACHE_SIZE - EXT2_DIR_REC_LEN(1);
-		for ( ;(char*)de <= limit; de = ext2_next_entry(de))
+		for ( ;(char*)de <= limit; de = ext2_next_entry(de)) {
 			if (de->inode) {
 				int over;
 				unsigned char d_type = DT_UNKNOWN;
@@ -292,11 +296,12 @@ ext2_readdir (struct file * filp, void * dirent, filldir_t filldir)
 					goto done;
 				}
 			}
+			filp->f_pos += le16_to_cpu(de->rec_len);
+		}
 		ext2_put_page(page);
 	}
 
 done:
-	filp->f_pos = (n << PAGE_CACHE_SHIFT) | offset;
 	filp->f_version = inode->i_version;
 	UPDATE_ATIME(inode);
 	return ret;
