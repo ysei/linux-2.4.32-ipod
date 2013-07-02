@@ -104,7 +104,7 @@
  * our board
  * (20030314 - hede) 
  */
-#if defined(CONFIG_FB_COBRA5272) || defined (CONFIG_DRAGEN2) || defined(CONFIG_M68VZ328)
+#if defined(CONFIG_FB_COBRA5272) || defined (CONFIG_DRAGEN2)
 #include <linux/linux_logo.h>
 #else
 #include <asm/linux_logo.h>
@@ -582,10 +582,11 @@ static void fbcon_setup(int con, int init, int logo)
     int i, charcnt = 256;
     struct fbcon_font_desc *font;
     
-#ifndef CONFIG_ARCH_IPOD
+/* disable the logo */
+/*
     if (con != fg_console || (p->fb_info->flags & FBINFO_FLAG_MODULE) ||
         p->type == FB_TYPE_TEXT)
-#endif
+*/
     	logo = 0;
 
     p->var.xoffset = p->var.yoffset = p->yscroll = 0;  /* reset wrap/pan */
@@ -672,8 +673,9 @@ static void fbcon_setup(int con, int init, int logo)
     
     if (logo) {
     	/* Need to make room for the logo */
-	int cnt, step, erase_char;
-
+	int cnt;
+	int step;
+    
     	logo_lines = (LOGO_H + fontheight(p) - 1) / fontheight(p);
     	q = (unsigned short *)(conp->vc_origin + conp->vc_size_row * old_rows);
     	step = logo_lines * old_cols;
@@ -703,10 +705,8 @@ static void fbcon_setup(int con, int init, int logo)
     		conp->vc_pos += logo_lines * conp->vc_size_row;
     	    }
     	}
-	erase_char = conp->vc_video_erase_char;
-	if (! conp->vc_can_do_color)
-	    erase_char &= ~0x400; /* disable underline */
-	scr_memsetw((unsigned short *)conp->vc_origin, erase_char,
+    	scr_memsetw((unsigned short *)conp->vc_origin,
+		    conp->vc_video_erase_char, 
 		    conp->vc_size_row * logo_lines);
     }
     
@@ -1890,10 +1890,7 @@ static inline int fbcon_set_font(int unit, struct console_font_op *op)
        font length must be multiple of 256, at least. And 256 is multiple
        of 4 */
     k = 0;
-    while (p > new_data) {
-	    p = (u8 *)((u32 *)p - 1);
-	    k += *(u32 *) p;
-    }
+    while (p > new_data) k += *--(u32 *)p;
     FNTSUM(new_data) = k;
     /* Check if the same font is on some other console already */
     for (i = 0; i < MAX_NR_CONSOLES; i++) {
@@ -2327,28 +2324,6 @@ static int __init fbcon_show_logo( void )
 		}
 	    }
 	    done = 1;
-	}
-#endif
-#if defined(CONFIG_FBCON_CFB12)
-	if ((depth == 12) && (p->visual == FB_VISUAL_TRUECOLOR)) {
-		unsigned char *d, c0, c1;
-
-		src = logo;
-		dst = fb;
-		for (y1 = LOGO_H ; y1  ; y1--, dst += line) {
-			d = dst;
-			for (x1 = LOGO_W >> 1 ; x1 ; x1--) {
-				c0 = *src++ - 0x20;
-				c1 = *src++ - 0x20;
-				fb_writeb (((linux_logo_red[c0]   >> 4) & 0x0F) |
-				          (linux_logo_green[c0] & 0xF0), d++);
-				fb_writeb (((linux_logo_blue[c0]  >> 4) & 0x0F) |
-				          (linux_logo_red[c1]   & 0xF0), d++);
-				fb_writeb (((linux_logo_green[c1] >> 4) & 0x0F) |
-				          (linux_logo_blue[c1]  & 0xF0), d++);
-			}
-		}
-		done = 1;
 	}
 #endif
 #if defined(CONFIG_FBCON_CFB4)

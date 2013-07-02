@@ -1,11 +1,11 @@
 VERSION = 2
 PATCHLEVEL = 4
-SUBLEVEL = 32
-EXTRAVERSION = -uc0
+SUBLEVEL = 24
+EXTRAVERSION = -ipod2
 
 KERNELRELEASE=$(VERSION).$(PATCHLEVEL).$(SUBLEVEL)$(EXTRAVERSION)
 
-# ARCH := armnommu
+ARCH := armnommu
 # ARCH := m68knommu
 # ARCH := h8300
 # ARCH := niosnommu
@@ -28,7 +28,7 @@ HOSTCC  	= unset GCC_EXEC_PREFIX; gcc
 HOSTCFLAGS	= -Wall -Wstrict-prototypes -O2 -fomit-frame-pointer
 
 # CROSS_COMPILE 	= m68k-elf-
-# CROSS_COMPILE 	= arm-elf-
+CROSS_COMPILE 	= arm-elf-
 # CROSS_COMPILE 	= h8300-elf-
 # CROSS_COMPILE 	= nios-elf-
 # CROSS_COMPILE		= e1-coff-
@@ -52,7 +52,7 @@ OBJDUMP		= $(CROSS_COMPILE)objdump
 MAKEFILES	= $(TOPDIR)/.config
 GENKSYMS	= /sbin/genksyms
 DEPMOD		= /sbin/depmod
-MODFLAGS	= -DMODULE $(ARCHMODFLAGS)
+MODFLAGS	= -DMODULE
 CFLAGS_KERNEL	=
 PERL		= perl
 AWK		= awk
@@ -176,7 +176,6 @@ DRIVERS-  :=
 DRIVERS-$(CONFIG_ACPI_BOOT) += drivers/acpi/acpi.o
 DRIVERS-$(CONFIG_PARPORT) += drivers/parport/driver.o
 DRIVERS-y += drivers/char/char.o \
-	drivers/serial/serial.o \
 	drivers/block/block.o \
 	drivers/misc/misc.o \
 	drivers/net/net.o
@@ -195,8 +194,6 @@ DRIVERS-$(CONFIG_FC4) += drivers/fc4/fc4.a
 DRIVERS-$(CONFIG_SCSI) += drivers/scsi/scsidrv.o
 DRIVERS-$(CONFIG_FUSION_BOOT) += drivers/message/fusion/fusion.o
 DRIVERS-$(CONFIG_IEEE1394) += drivers/ieee1394/ieee1394drv.o
-DRIVERS-$(CONFIG_FUJITSU) += drivers/fujitsu/fujitsu.o
-DRIVERS-$(CONFIG_FRV_ACPI_EMU) += drivers/frv_acpi/frvacpi.o
 
 ifneq ($(CONFIG_CD_NO_IDESCSI)$(CONFIG_BLK_DEV_IDECD)$(CONFIG_BLK_DEV_SR)$(CONFIG_PARIDE_PCD),)
 DRIVERS-y += drivers/cdrom/driver.o
@@ -216,8 +213,7 @@ DRIVERS-$(CONFIG_FC4) += drivers/fc4/fc4.a
 DRIVERS-$(CONFIG_PPC32) += drivers/macintosh/macintosh.o
 DRIVERS-$(CONFIG_MAC) += drivers/macintosh/macintosh.o
 DRIVERS-$(CONFIG_ISAPNP) += drivers/pnp/pnp.o
-DRIVERS-$(CONFIG_I2C) += drivers/i2c/i2c.o
-DRIVERS-$(CONFIG_SPI) += drivers/spi/spi.o
+DRIVERS-$(CONFIG_SGI_IP22) += drivers/sgi/sgi.a
 DRIVERS-$(CONFIG_VT) += drivers/video/video.o
 DRIVERS-$(CONFIG_PARIDE) += drivers/block/paride/paride.a
 DRIVERS-$(CONFIG_HAMRADIO) += drivers/net/hamradio/hamradio.o
@@ -229,6 +225,7 @@ DRIVERS-$(CONFIG_INPUT) += drivers/input/inputdrv.o
 DRIVERS-$(CONFIG_HIL) += drivers/hil/hil.o
 DRIVERS-$(CONFIG_I2O) += drivers/message/i2o/i2o.o
 DRIVERS-$(CONFIG_IRDA) += drivers/net/irda/irda.o
+DRIVERS-$(CONFIG_I2C) += drivers/i2c/i2c.o
 DRIVERS-$(CONFIG_PHONE) += drivers/telephony/telephony.o
 DRIVERS-$(CONFIG_MD) += drivers/md/mddev.o
 DRIVERS-$(CONFIG_GSC) += drivers/gsc/gscbus.o
@@ -236,7 +233,6 @@ DRIVERS-$(CONFIG_BLUEZ) += drivers/bluetooth/bluetooth.o
 DRIVERS-$(CONFIG_HOTPLUG_PCI) += drivers/hotplug/vmlinux-obj.o
 DRIVERS-$(CONFIG_ISDN_BOOL) += drivers/isdn/vmlinux-obj.o
 DRIVERS-$(CONFIG_CRYPTO) += crypto/crypto.o
-DRIVERS-$(CONFIG_ARCH_AT91RM9200) += drivers/at91/at91drv.o
 
 DRIVERS := $(DRIVERS-y)
 
@@ -263,12 +259,10 @@ CLEAN_FILES = \
 	drivers/scsi/aic7xxx/aicasm/aicdb.h \
 	drivers/scsi/aic7xxx/aicasm/y.tab.h \
 	drivers/scsi/53c700_d.h \
-	drivers/tc/lk201-map.c \
 	net/khttpd/make_times_h \
 	net/khttpd/times.h \
 	net/ipsec/*.c \
-	submenu* \
-	drivers/ieee1394/oui.c
+	submenu*
 # directories removed with 'make clean'
 CLEAN_DIRS = \
 	modules
@@ -378,7 +372,6 @@ newversion:
 
 uts_len		:= 64
 uts_truncate	:= sed -e 's/\(.\{1,$(uts_len)\}\).*/\1/'
-uts_nodomain	:= sed -e 's/[.].*$$//'
 
 include/linux/compile.h: $(CONFIGURATION) include/linux/version.h newversion
 	@echo -n \#`cat .version` > .ver1
@@ -388,7 +381,7 @@ include/linux/compile.h: $(CONFIGURATION) include/linux/version.h newversion
 	@echo \#define UTS_VERSION \"`cat .ver1 | $(uts_truncate)`\" > .ver
 	@LANG=C echo \#define LINUX_COMPILE_TIME \"`date +%T`\" >> .ver
 	@echo \#define LINUX_COMPILE_BY \"`whoami`\" >> .ver
-	@echo \#define LINUX_COMPILE_HOST \"`hostname | $(uts_truncate) | $(uts_nodomain)`\" >> .ver
+	@echo \#define LINUX_COMPILE_HOST \"`hostname | $(uts_truncate)`\" >> .ver
 	@([ -x /bin/dnsdomainname ] && /bin/dnsdomainname > .ver1) || \
 	 ([ -x /bin/domainname ] && /bin/domainname > .ver1) || \
 	 echo > .ver1
@@ -447,7 +440,7 @@ $(patsubst %, _mod_%, $(SUBDIRS)) : include/linux/version.h include/config/MARKE
 modules_install: _modinst_ $(patsubst %, _modinst_%, $(SUBDIRS)) _modinst_post
 
 .PHONY: _modinst_
-ifeq (y,y)
+ifeq ($(CONFIG_UCLINUX),y)
 _modinst_:
 else
 _modinst_:
@@ -465,7 +458,7 @@ endif
 ifeq "$(strip $(INSTALL_MOD_PATH))" ""
 depmod_opts	:=
 else
-depmod_opts	:= -b $(INSTALL_MOD_PATH)/lib/modules -r
+depmod_opts	:= -b $(INSTALL_MOD_PATH) -r
 endif
 .PHONY: _modinst_post
 _modinst_post: _modinst_post_pcmcia

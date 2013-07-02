@@ -135,10 +135,9 @@ extern int sisfb_init(void);
 extern int sisfb_setup(char*);
 extern int stifb_init(void);
 extern int stifb_setup(char*);
-extern int pmagaafb_init(void);
 extern int pmagbafb_init(void);
 extern int pmagbbfb_init(void);
-extern int maxinefb_init(void);
+extern void maxinefb_init(void);
 extern int tx3912fb_init(void);
 extern int radeonfb_init(void);
 extern int radeonfb_setup(char*);
@@ -150,8 +149,6 @@ extern int mq200fb_init(void);
 extern int mq200fb_setup(char*);
 extern int e1356fb_init(void);
 extern int e1356fb_setup(char*);
-extern int ep93xxfb_init(void);
-extern int ep93xxfb_setup(char*);
 extern int au1100fb_init(void);
 extern int au1100fb_setup(char*);
 extern int pvr2fb_init(void);
@@ -160,8 +157,6 @@ extern int sstfb_init(void);
 extern int sstfb_setup(char*);
 extern int ipodfb_init(void);
 extern int ipodfb_setup(char*);
-extern int mq1100fb_setup(char*);
-extern int mq1100fb_init(char*);
 extern int s3c44b0xfb_init(void);
 extern int s3c44b0xfb_setup(char*);
 #if defined(CONFIG_FB_COBRA5272) && defined(CONFIG_FB_S1D13706)
@@ -172,16 +167,6 @@ extern int s3c44b0xfb_setup(char*);
 extern int s1d13706fb_init(void);
 extern int s1d13706fb_setup(char*);
 #endif
-#if defined(CONFIG_FB_COBRA5272) && defined(CONFIG_FB_S1D13806)
-/* 
- * Again: This is _really_ experimental!
- * Feedback really welcome!
- */
-extern int s1d13806fb_init(void);
-extern int s1d13806fb_setup(char*);
-#endif
-extern int it8181fb_init(void);
-extern int it8181fb_setup(char*);
 
 static struct {
 	const char *name;
@@ -196,8 +181,8 @@ static struct {
 	 */
 	{ "sbus", sbusfb_init, sbusfb_setup },
 #endif
+
 #ifdef CONFIG_FB_IPOD
-#define CONFIG_VT_CONSOLE 1
 	{ "ipod", ipodfb_init, ipodfb_setup },
 #endif
 
@@ -213,9 +198,6 @@ static struct {
 #endif
 #ifdef CONFIG_FB_CLPS711X
 	{ "clps711xfb", clps711xfb_init, NULL },
-#endif
-#ifdef CONFIG_FB_EDB7312
-	{ "edb7312fb", edb7312fb_init, edb7312fb_setup },
 #endif
 #ifdef CONFIG_FB_CYBER
 	{ "cyber", cyberfb_init, cyberfb_setup },
@@ -368,9 +350,6 @@ static struct {
 #ifdef CONFIG_FB_PVR2
 	{ "pvr2", pvr2fb_init, pvr2fb_setup },
 #endif
-#ifdef CONFIG_FB_PMAG_AA
-	{ "pmagaafb", pmagaafb_init, NULL },
-#endif
 #ifdef CONFIG_FB_PMAG_BA
 	{ "pmagbafb", pmagbafb_init, NULL },
 #endif
@@ -380,9 +359,6 @@ static struct {
 #ifdef CONFIG_FB_MAXINE
 	{ "maxinefb", maxinefb_init, NULL },
 #endif
-#ifdef CONFIG_FB_EP93XX
-	{ "ep93xxfb", ep93xxfb_init, ep93xxfb_setup },
-#endif
 #ifdef CONFIG_FB_AU1100
 	{ "au1100fb", au1100fb_init, au1100fb_setup },
 #endif 
@@ -391,15 +367,6 @@ static struct {
 #endif 
 #if defined(CONFIG_FB_COBRA5272) && defined(CONFIG_FB_S1D13706)
 	{ "s1d13706fb", s1d13706fb_init, s1d13706fb_setup },
-#endif
-#if defined(CONFIG_FB_COBRA5272) && defined(CONFIG_FB_S1D13806)
-	{ "s1d13806fb", s1d13806fb_init, s1d13806fb_setup },
-#endif
-#ifdef CONFIG_FB_IT8181
-	{ "it8181fb", it8181fb_init, it8181fb_setup },
-#endif
-#if defined(CONFIG_FB_MQ1100)
-	{ "MediaQ", mq1100fb_init, mq1100fb_setup },
 #endif
 
 	/*
@@ -482,27 +449,23 @@ static int fbmem_read_proc(char *buf, char **start, off_t offset,
 static ssize_t
 fb_read(struct file *file, char *buf, size_t count, loff_t *ppos)
 {
-	loff_t p = *ppos;
+	unsigned long p = *ppos;
 	struct inode *inode = file->f_dentry->d_inode;
 	int fbidx = GET_FB_IDX(inode->i_rdev);
 	struct fb_info *info = registered_fb[fbidx];
 	struct fb_ops *fb = info->fbops;
 	struct fb_fix_screeninfo fix;
-	unsigned int size;
 
 	if (! fb || ! info->disp)
 		return -ENODEV;
 
-	if (p < 0)
-		return -EINVAL;
-
 	fb->fb_get_fix(&fix,PROC_CONSOLE(info), info);
-	size = info->mapped_vram ? info->mapped_vram : fix.smem_len;
-	
-	if (p >= size)
+	if (p >= fix.smem_len)
 	    return 0;
-	if (count > size - p)
-		count = size - p;
+	if (count >= fix.smem_len)
+	    count = fix.smem_len;
+	if (count + p > fix.smem_len)
+		count = fix.smem_len - p;
 	if (count) {
 	    char *base_addr;
 
@@ -510,7 +473,7 @@ fb_read(struct file *file, char *buf, size_t count, loff_t *ppos)
 	    count -= copy_to_user(buf, base_addr+p, count);
 	    if (!count)
 		return -EFAULT;
-	    *ppos = p + count;
+	    *ppos += count;
 	}
 	return count;
 }
@@ -518,29 +481,25 @@ fb_read(struct file *file, char *buf, size_t count, loff_t *ppos)
 static ssize_t
 fb_write(struct file *file, const char *buf, size_t count, loff_t *ppos)
 {
-	loff_t p = *ppos;
+	unsigned long p = *ppos;
 	struct inode *inode = file->f_dentry->d_inode;
 	int fbidx = GET_FB_IDX(inode->i_rdev);
 	struct fb_info *info = registered_fb[fbidx];
 	struct fb_ops *fb = info->fbops;
 	struct fb_fix_screeninfo fix;
 	int err;
-	unsigned int size;
 
 	if (! fb || ! info->disp)
 		return -ENODEV;
 
-	if (p < 0)
-		return -EINVAL;
-
 	fb->fb_get_fix(&fix, PROC_CONSOLE(info), info);
-	size = info->mapped_vram ? info->mapped_vram : fix.smem_len;
-	
-	if (p > size)
+	if (p > fix.smem_len)
 	    return -ENOSPC;
+	if (count >= fix.smem_len)
+	    count = fix.smem_len;
 	err = 0;
-	if (count > size - p) {
-	    count = size - p;
+	if (count + p > fix.smem_len) {
+	    count = fix.smem_len - p;
 	    err = -ENOSPC;
 	}
 	if (count) {
@@ -548,7 +507,7 @@ fb_write(struct file *file, const char *buf, size_t count, loff_t *ppos)
 
 	    base_addr = info->disp->screen_base;
 	    count -= copy_from_user(base_addr+p, buf, count);
-	    *ppos = p + count;
+	    *ppos += count;
 	    err = -EFAULT;
 	}
 	if (count)
@@ -668,21 +627,19 @@ fb_mmap(struct file *file, struct vm_area_struct * vma)
 	int fbidx = GET_FB_IDX(file->f_dentry->d_inode->i_rdev);
 	struct fb_info *info = registered_fb[fbidx];
 	struct fb_ops *fb = info->fbops;
-#if !defined(__sparc__) || defined(__sparc_v9__)
-	struct fb_fix_screeninfo fix;
-#endif
-
-#ifdef NO_MM 
-	fb->fb_get_fix(&fix, PROC_CONSOLE(info), info);
-	vma->vm_start = fix.smem_start + (vma->vm_pgoff << PAGE_SHIFT);
-	return (0);
-#else /* /NO_MM */   
 	unsigned long off = 0;
 #if !defined(__sparc__) || defined(__sparc_v9__)
+	struct fb_fix_screeninfo fix;
 	struct fb_var_screeninfo var;
 	unsigned long start;
 	u32 len;
 #endif
+#ifdef NO_MM 
+	fb->fb_get_fix(&fix, PROC_CONSOLE(info), info);
+	vma->vm_start = fix.smem_start+ vma->vm_offset;
+	return (0);
+#else /* /NO_MM */   
+
 	if (vma->vm_pgoff > (~0UL >> PAGE_SHIFT))
 		return -EINVAL;
 	off = vma->vm_pgoff << PAGE_SHIFT;
@@ -709,7 +666,7 @@ fb_mmap(struct file *file, struct vm_area_struct * vma)
 	fb->fb_get_fix(&fix, PROC_CONSOLE(info), info);
 	/* frame buffer memory */
 	start = fix.smem_start;
-	len = PAGE_ALIGN((start & ~PAGE_MASK) + fix.smem_len);
+	len = PAGE_ALIGN((start & ~PAGE_MASK)+fix.smem_len);
 	if (off >= len) {
 		/* memory mapped io */
 		off -= len;
@@ -764,11 +721,6 @@ fb_mmap(struct file *file, struct vm_area_struct * vma)
 	vma->vm_page_prot = pgprot_writecombine(vma->vm_page_prot);
 #elif defined(__hppa__)
 	pgprot_val(vma->vm_page_prot) |= _PAGE_NO_CACHE; 
-#elif defined(__frv__)
-	vma->vm_page_prot = __pgprot(pgprot_val(vma->vm_page_prot) | _PAGE_NOCACHE);	
-	/* don't try to swap out physical pages */
-	/* don't dump addresses that are not real memory to a core file */
-	vma->vm_flags |= (VM_RESERVED | VM_IO);
 #else
 #warning What do we have to do here??
 #endif
@@ -839,25 +791,6 @@ fb_release(struct inode *inode, struct file *file)
 	return 0;
 }
 
-static unsigned long
-fb_get_unmapped_area(struct file *file,
-		     unsigned long addr, unsigned long len,
-		     unsigned long pgoff, unsigned long flags)
-{
-	int fbidx = GET_FB_IDX(file->f_dentry->d_inode->i_rdev);
-	struct fb_info *info = registered_fb[fbidx];
-	struct fb_ops *fb = info->fbops;
-
-	if (fb->get_fb_unmapped_area)
-	  	return fb->get_fb_unmapped_area(file, addr, len, pgoff, flags);
-
-#ifdef HAVE_ARCH_FB_UNMAPPED_AREA
-	return get_fb_unmapped_area(file, addr, len, pgoff, flags);
-#else
-	return -ENOSYS;
-#endif
-}
-
 static struct file_operations fb_fops = {
 	owner:		THIS_MODULE,
 	read:		fb_read,
@@ -866,7 +799,9 @@ static struct file_operations fb_fops = {
 	mmap:		fb_mmap,
 	open:		fb_open,
 	release:	fb_release,
-	get_unmapped_area: fb_get_unmapped_area,
+#ifdef HAVE_ARCH_FB_UNMAPPED_AREA
+	get_unmapped_area: get_fb_unmapped_area,
+#endif
 };
 
 static devfs_handle_t devfs_handle;
@@ -920,7 +855,8 @@ register_framebuffer(struct fb_info *fb_info)
 
 	if (first) {
 		first = 0;
-#ifdef CONFIG_VT_CONSOLE
+#define CONFIG_CONSOLE
+#ifdef CONFIG_CONSOLE
 		take_over_console(&fb_con, first_fb_vc, last_fb_vc, fbcon_is_default);
 #endif
 	}

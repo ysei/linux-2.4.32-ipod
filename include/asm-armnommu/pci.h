@@ -3,7 +3,6 @@
 
 #ifdef __KERNEL__
 
-#include <linux/mm.h>
 #include <asm/arch/hardware.h>
 
 extern inline void pcibios_set_master(struct pci_dev *dev)

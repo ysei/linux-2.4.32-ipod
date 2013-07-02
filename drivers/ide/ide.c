@@ -2533,12 +2533,6 @@ static void __init probe_for_hwifs (void)
 		rapide_init();
 	}
 #endif /* CONFIG_BLK_DEV_IDE_RAPIDE */
-#ifdef CONFIG_BLK_DEV_IDE_ESS710
-	{
-		extern void ess710ide_init(void);
-		ess710ide_init();
-	}
-#endif /* CONFIG_BLK_DEV_UIDE_ESS710 */
 #ifdef CONFIG_BLK_DEV_GAYLE
 	{
 		extern void gayle_init(void);
@@ -2563,12 +2557,6 @@ static void __init probe_for_hwifs (void)
 		uclinux_ide_init();
 	}
 #endif /* CONFIG_BLK_DEV_UCLINUX_IDE */
-#ifdef CONFIG_BLK_DEV_CPCI405_IDE
-	{
-		extern void cpci405ide_init(void);
-		cpci405ide_init();
-	}
-#endif /* CONFIG_BLK_DEV_CPCI405_IDE */
 #ifdef CONFIG_BLK_DEV_Q40IDE
 	{
 		extern void q40ide_init(void);
@@ -2591,6 +2579,12 @@ static void __init probe_for_hwifs (void)
         {
 		extern void h8300_ide_init(void);
 		h8300_ide_init();
+	}
+#endif
+#ifdef CONFIG_ARCH_IPOD
+	{
+		extern void ipod_ide_register(void);
+		ipod_ide_register();
 	}
 #endif
 }
@@ -2883,10 +2877,8 @@ int ide_register_subdriver (ide_drive_t *drive, ide_driver_t *driver, int versio
 	drive->revalidate = 1;
 	drive->suspend_reset = 0;
 #ifdef CONFIG_PROC_FS
-	if (drive->driver != &idedefault_driver) {
-		ide_add_proc_entries(drive->proc, generic_subdriver_entries, drive);
-		ide_add_proc_entries(drive->proc, driver->proc, drive);
-	}
+	ide_add_proc_entries(drive->proc, generic_subdriver_entries, drive);
+	ide_add_proc_entries(drive->proc, driver->proc, drive);
 #endif
 	return 0;
 }
@@ -3020,24 +3012,7 @@ static int ide_notify_reboot (struct notifier_block *this, unsigned long event, 
 
 			/* set the drive to standby */
 			printk("%s ", drive->name);
-#ifdef	CONFIG_ALPHA
-			/* On Alpha, halt(8) doesn't actually turn the machine
-			   off, it puts you into the sort of firmware monitor.
-			   Typically, it's used to boot another kernel image,
-			   so it's not much different from reboot(8).
-			   Therefore, we don't need to spin down the disk in
-			   this case, especially since Alpha firmware doesn't
-			   handle disks in standby mode properly.
-			   On the other hand, it's reasonably safe to turn
-			   the power off when the shutdown process reaches
-			   the firmware prompt, as the firmware initialization
-			   takes rather long time - at least 10 seconds,
-			   which should be sufficient for the disk to expire
-			   its write cache. */
-			if (event == SYS_POWER_OFF)
-#else
 			if (event != SYS_RESTART)
-#endif
 				if (DRIVER(drive)->standby(drive))
 					continue;
 

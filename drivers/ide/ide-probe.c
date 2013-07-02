@@ -57,6 +57,11 @@
 #include <asm/uaccess.h>
 #include <asm/io.h>
 
+#ifdef CONFIG_IDE_IPOD
+#define MAX_HD		2
+static int hd_hardsectsizes[MAX_HD<<6];
+#endif
+
 /**
  *	generic_id		-	add a generic drive id
  *	@drive:	drive to make an ID block for
@@ -103,8 +108,7 @@ static inline int drive_is_flashcard (ide_drive_t *drive)
 		if (id->config == 0x848a) return 1;	/* CompactFlash */
 		if (!strncmp(id->model, "KODAK ATA_FLASH", 15)	/* Kodak */
 		 || !strncmp(id->model, "Hitachi CV", 10)	/* Hitachi */
-		 || !strncmp(id->model, "SunDisk SDCFB", 13)	/* old SanDisk */
-		 || !strncmp(id->model, "SanDisk SDCFB", 13)	/* SanDisk */
+		 || !strncmp(id->model, "SunDisk SDCFB", 13)	/* SunDisk */
 		 || !strncmp(id->model, "HAGIWARA HPC", 12)	/* Hagiwara */
 		 || !strncmp(id->model, "LEXAR ATA_FLASH", 15)	/* Lexar */
 		 || !strncmp(id->model, "ATA_FLASH", 9))	/* Simple Tech */
@@ -262,6 +266,29 @@ static inline void do_identify (ide_drive_t *drive, u8 cmd)
 	}
 	drive->media = ide_disk;
 	printk("%s DISK drive\n", (drive->is_flash) ? "CFA" : "ATA" );
+
+#ifdef CONFIG_IDE_IPOD
+#define ID_WORD_106(id)	((id)->words104_125[2])
+	/* bits 14 & 13 are set */
+	if ((ID_WORD_106(id) & 0xe000) == 0x6000) {
+		int d;
+		int logical_sec_per_phys_sec = 1;
+		if ((ID_WORD_106(id) & 0xf) == 1)
+			logical_sec_per_phys_sec = 2;
+		printk("%s: logical sector size %d\n", drive->name, logical_sec_per_phys_sec);
+
+		if (!hardsect_size[hwif->major]) {
+			hardsect_size[hwif->major] = hd_hardsectsizes;
+		}
+
+		for(d=0; d < (MAX_HD << 6); d++) {
+			hardsect_size[hwif->major][d] = 512 * logical_sec_per_phys_sec;
+		}
+	}
+#undef ID_WORD_106
+#undef MAX_HD
+#endif
+
 	QUIRK_LIST(drive);
 	return;
 
@@ -462,7 +489,7 @@ static int do_probe (ide_drive_t *drive, u8 cmd)
 	SELECT_DRIVE(drive);
 	ide_delay_50ms();
 
-#if defined(CONFIG_COLDFIRE) || defined(CONFIG_MACH_IPD)
+#ifdef CONFIG_COLDFIRE
 	/*
 	 *  ColdFire platforms boot up so quick that most hard drives
 	 *  have not completed there own self tests. Pause here for

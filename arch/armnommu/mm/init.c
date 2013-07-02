@@ -376,13 +376,11 @@ static __init void reserve_node_zero(unsigned int bootmap_pfn, unsigned int boot
 	 * that DMA-able memory starts at zero.
 	 */
 
-	if (machine_is_integrator() || machine_is_snds100() || machine_is_dm270() ||
+	if (machine_is_integrator() || machine_is_snds100() ||
 	    machine_is_netarm()    || machine_is_evS3C4530HEI() ||
 	    machine_is_smdk2500() || machine_is_S3C2500REFRGP() )
 		reserve_bootmem_node(pgdat, 0, __pa(&_stext));
 
-	if ( machine_is_uc5471dsp() || machine_is_sj5471eng() )
-		reserve_bootmem_node(pgdat, 0x10000000, 0x00020000);
 
 	/*
 	 * These should likewise go elsewhere.  They pre-reserve
@@ -668,11 +666,7 @@ void free_initmem(void)
 	    !machine_is_cx821xx() &&
 	    !machine_is_atmel() &&
 	    !machine_is_netarm() &&
-	    !machine_is_dm270() &&
 	    !machine_is_ta7v() &&
-	    !machine_is_vc547x() &&
-	    !machine_is_uc5471dsp() &&
-	    !machine_is_sj5471eng() &&
 	    !machine_is_ta7s()) {
 		free_area((unsigned long)(&__init_begin),
 			  (unsigned long)(&__init_end),

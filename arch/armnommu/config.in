@@ -5,8 +5,6 @@
 # Additional changes:
 #  (c) Copyright 2001-2002 - S3C4530 by Arcturus Networks Inc.
 #  (c) Copyright 2002-2003 - S3C2500 by Arcturus Networks Inc.
-#  (c) Copyright 2003 - S3C3410X by Thomas Eschenbacher <thomas.eschenbacher@gmx.de>
-#  (c) Copyright 2003 - S3C44B0X by Thomas Eschenbacher <thomas.eschenbacher@gmx.de>
 #
 mainmenu_name "Linux Kernel Configuration"
 
@@ -51,22 +49,15 @@ mainmenu_option next_comment
 comment 'System Type'
 choice 'ARM system type' \
 	 "TI-DSC21		CONFIG_ARCH_DSC21 \
-	  TI-VC547X		CONFIG_ARCH_VC547X \
-	  TI-DM270		CONFIG_ARCH_DM270 \
+	  TI-C5471		CONFIG_ARCH_C5471 \
 	  Conexant		CONFIG_ARCH_CNXT \
 	  NET+ARM		CONFIG_ARCH_NETARM \
 	  Triscend-A7S		CONFIG_ARCH_TA7S \
 	  Triscend-A7V		CONFIG_ARCH_TA7V \
 	  SWARM			CONFIG_ARCH_SWARM \
-	  Intersil		CONFIG_ARCH_INL \
 	  Samsung		CONFIG_ARCH_SAMSUNG \
-	  LPC			CONFIG_ARCH_LPC \
-	  OKIM67X		CONFIG_MACH_EB67XDIP \
 	  Atmel			CONFIG_ARCH_ATMEL \
-	  uC-C5471DSP		CONFIG_MACH_UC5471DSP \
-	  SJ5471-ENG		CONFIG_MACH_SJ5471ENG \
-	  iPod			CONFIG_ARCH_IPOD \
-	  Winbond		CONFIG_ARCH_WINBOND" TI-DSC21
+	  iPod			CONFIG_ARCH_IPOD" TI-DSC21
 
 if [ "$CONFIG_ARCH_TA7V" = "y" ]; then
    choice ' Triscend A7V Derivative' \
@@ -98,8 +89,7 @@ if [ "$CONFIG_ARCH_CNXT" = "y" ]; then
 	  HUMBER		CONFIG_BD_HUMBER \
 	  GOLDENGATE		CONFIG_BD_GOLDENGATE \
 	  MACKINAC		CONFIG_BD_MACKINAC \
-	  RUSHMORE		CONFIG_BD_RUSHMORE \
-	  TIBURON		CONFIG_BD_TIBURON" MACKINAC
+	  RUSHMORE		CONFIG_BD_RUSHMORE" MACKINAC
       if [ "$CONFIG_BD_HASBANI" = "y" ]; then
          define_bool CONFIG_CHIP_P52 y
       fi
@@ -111,11 +101,6 @@ if [ "$CONFIG_ARCH_CNXT" = "y" ]; then
       fi
       if [ "$CONFIG_BD_RUSHMORE" = "y" ]; then
          define_bool CONFIG_CHIP_CX82110 y
-      fi
-      if [ "$CONFIG_BD_TIBURON" = "y" ]; then
-         define_bool CONFIG_CHIP_CX82100 y
-         define_bool CONFIG_CMDLINE_BOOL y
-         define_string CONFIG_CMDLINE "root=/dev/mtdblock2 init=/linuxrc"
       fi
    fi
 fi
@@ -180,17 +165,10 @@ if [ "$CONFIG_ARCH_CNXT" = "y" ]; then
    define_bool CONFIG_CPU_WITH_CACHE y
    define_bool CONFIG_CPU_WITH_MCR_INSTRUCTION y
    if [ "$CONFIG_SET_MEM_PARAM" = "n" ]; then
-      if [ "$CONFIG_BD_TIBURON" = "y" ]; then
-         define_hex DRAM_BASE 0x00800000
-         define_hex DRAM_SIZE 0x00780000
-         define_hex FLASH_MEM_BASE 0x00400000
-         define_hex FLASH_SIZE 0x00200000
-      else
-         define_hex DRAM_BASE 0x00800000
-         define_hex DRAM_SIZE 0x00800000
-         define_hex FLASH_MEM_BASE 0x00400000
-         define_hex FLASH_SIZE 0x00400000
-      fi
+      define_hex DRAM_BASE 0x00800000
+      define_hex DRAM_SIZE 0x00800000
+      define_hex FLASH_MEM_BASE 0x00400000
+      define_hex FLASH_SIZE 0x00400000
    fi
 
    bool '  ARM940T CPU idle' CONFIG_CPU_ARM940_CPU_IDLE
@@ -218,7 +196,7 @@ if [ "$CONFIG_ARCH_DSC21" = "y" ]; then
    define_bool CONFIG_DUMMY_CONSOLE y
 fi
 
-if [ "$CONFIG_ARCH_VC547X" = "y" ]; then
+if [ "$CONFIG_ARCH_C5471" = "y" ]; then
    define_bool CONFIG_CPU_ARM710 y
    define_bool CONFIG_CPU_ARM7TDMI y
    define_bool CONFIG_CPU_32 y
@@ -236,76 +214,6 @@ if [ "$CONFIG_ARCH_VC547X" = "y" ]; then
    define_bool CONFIG_DUMMY_CONSOLE y
 fi
 
-if [ "$CONFIG_MACH_UC5471DSP" = "y" ]; then
-   bool ' Enable uCbootloader support' CONFIG_UCBOOTSTRAP
-   define_bool CONFIG_CPU_ARM710 y
-   define_bool CONFIG_CPU_ARM7TDMI y
-   define_bool CONFIG_CPU_32 y
-   define_bool CONFIG_CPU_26 n
-   define_bool CONFIG_NO_PGT_CACHE y
-   define_bool CONFIG_CPU_WITH_CACHE y
-   define_bool CONFIG_CPU_WITH_MCR_INSTRUCTION n
-   define_hex DRAM_BASE 0x10000000
-   if [ "$CONFIG_EXPERIMENTAL" = "y" ]; then
-      bool '  512k cramfs at top of RAM' CONFIG_UC5471DSP_RAM_CRAMFS
-   fi
-   if [ "$CONFIG_UC5471DSP_RAM_CRAMFS" = "y" ]; then
-      define_hex DRAM_SIZE 0x00780000
-   else
-      define_hex DRAM_SIZE 0x00800000
-   fi
-   define_hex FLASH_MEM_BASE 0x00000000
-   define_hex FLASH_SIZE 0x00400000
-   define_hex CONFIG_ARCH_VECTORS_BASE 0xffc00000
-fi
-
-if [ "$CONFIG_MACH_SJ5471ENG" = "y" ]; then
-   bool ' Enable uCbootloader support' CONFIG_UCBOOTSTRAP
-   define_bool CONFIG_CPU_ARM710 y
-   define_bool CONFIG_CPU_ARM7TDMI y
-   define_bool CONFIG_CPU_32 y
-   define_bool CONFIG_CPU_26 n
-   define_bool CONFIG_NO_PGT_CACHE y
-   define_bool CONFIG_CPU_WITH_CACHE y
-   define_bool CONFIG_CPU_WITH_MCR_INSTRUCTION n
-   define_hex DRAM_BASE 0x10000000
-   if [ "$CONFIG_EXPERIMENTAL" = "y" ]; then
-      bool '  512k cramfs at top of RAM' CONFIG_SJ5471ENG_RAM_CRAMFS
-   fi
-   if [ "$CONFIG_SJ5471ENG_RAM_CRAMFS" = "y" ]; then
-      define_hex DRAM_SIZE 0x00780000
-   else
-      define_hex DRAM_SIZE 0x00800000
-   fi
-   define_hex FLASH_MEM_BASE 0x00000000
-   define_hex FLASH_SIZE 0x00400000
-   define_hex CONFIG_ARCH_VECTORS_BASE 0xffc00000
-fi
-
-if [ "$CONFIG_ARCH_DM270" = "y" ]; then
-   define_bool CONFIG_CPU_ARM710 y
-   define_bool CONFIG_CPU_ARM7TDMI y
-   define_bool CONFIG_CPU_32 y
-   define_bool CONFIG_CPU_32v4 y
-   define_bool CONFIG_CPU_26 n
-   define_bool CONFIG_NO_PGT_CACHE y
-   define_bool CONFIG_CPU_WITH_CACHE y
-   define_bool CONFIG_CPU_WITH_MCR_INSTRUCTION n
-   define_bool CONFIG_SERIAL_DM270 y
-  
-   int  'CPU clock frequency' CONFIG_ARM_CLK 87750000 
-   int  'Timer prescale' CONFIG_DM270_TIMER_PRESCALE 351 
-   bool 'Serial Console' CONFIG_SERIAL_DM270_CONSOLE
-
-   if [ "$CONFIG_SET_MEM_PARAM" = "n" ]; then
-      define_hex DRAM_BASE 0x01200000
-      define_hex DRAM_SIZE 0x02000000
-      define_hex FLASH_MEM_BASE 0x00100000
-      define_hex FLASH_SIZE 0x00200000
-   fi
-   define_bool CONFIG_DUMMY_CONSOLE y
-fi
-
 if [ "$CONFIG_ARCH_SWARM" = "y" ]; then
 #  define_bool CONFIG_CPU_ARM610 y
    define_bool CONFIG_CPU_32 y
@@ -316,15 +224,6 @@ if [ "$CONFIG_ARCH_SWARM" = "y" ]; then
    define_bool CONFIG_CPU_WITH_MCR_INSTRUCTION y
    define_hex FLASH_MEM_BASE 0x00000000
    define_hex FLASH_SIZE 0x00100000
-fi
-
-if [ "$CONFIG_ARCH_LPC" = "y" ]; then
-	define_bool CONFIG_NO_PGT_CACHE y
-	define_bool CONFIG_CPU_ARM710 y
-	define_bool CONFIG_CPU_32 y
-	define_bool CONFIG_CPU_32v4 y
-	define_bool CONFIG_CPU_WITH_CACHE n
-	define_bool CONFIG_CPU_WITH_MCR_INSTRUCTION n
 fi
 
 if [ "$CONFIG_ARCH_ATMEL" = "y" ]; then
@@ -361,58 +260,10 @@ if [ "$CONFIG_ARCH_ATMEL" = "y" ]; then
    fi
 fi
 
-if [ "$CONFIG_ARCH_WINBOND" = "y" ]; then
-   define_bool CONFIG_NO_PGT_CACHE y
-   define_bool CONFIG_CPU_ARM710 y
-   define_bool CONFIG_CPU_32 y
-   define_bool CONFIG_CPU_32v4 y
-   define_bool CONFIG_CPU_WITH_CACHE y
-   define_bool CONFIG_CPU_WITH_MCR_INSTRUCTION n
-  
-   int  'CPU clock frequency' CONFIG_ARM_CLK 80000000 
-
-   if [ "$CONFIG_SET_MEM_PARAM" = "n" ]; then
-      define_hex DRAM_BASE 0x00000000
-      define_hex DRAM_SIZE 0x00400000
-      define_hex FLASH_MEM_BASE 0x7f000000
-      define_hex FLASH_SIZE 0x00100000
-   fi
-fi
-
-if [ "$CONFIG_MACH_EB67XDIP" = "y" ]; then
-   define_bool CONFIG_NO_PGT_CACHE y
-   define_bool CONFIG_CPU_ARM710 y
-   define_bool CONFIG_CPU_32 y
-   define_bool CONFIG_CPU_32v4 y
-   define_bool CONFIG_CPU_WITH_CACHE n
-   define_bool CONFIG_CPU_WITH_MCR_INSTRUCTION n
-  
-   choice ' OKI CPU' \
-   	" M67400X		CONFIG_CPU_OKIM67400X \
-	  M67500X 		CONFIG_CPU_OKIM67500X" M67400X
-
-   int  'CPU clock frequency' CONFIG_ARM_CLK 25000000 
-   bool 'Serial Console' CONFIG_SERIAL_OKI_CONSOLE
-
-   if [ "$CONFIG_SET_MEM_PARAM" = "n" ]; then
-      define_hex DRAM_BASE 0x00000000
-      define_hex DRAM_SIZE 0x02000000
-      define_hex FLASH_MEM_BASE 0xC8000000
-      define_hex FLASH_SIZE 0x00200000
-   fi
-	
-   hex 'Memory mapped 16-bit io base' CONFIG_MEM16_BASE 0xf4000000
-   hex 'Memory mapped 8-bit io base' CONFIG_MEM8_BASE 0xf4000000
-   hex '16-bit io base' CONFIG_IO16_BASE 0xf4000000
-   hex '8-bit io base' CONFIG_IO8_BASE 0xf4000000
-	
-fi
-
 if [ "$CONFIG_ARCH_NETARM" = "y" ]; then
    define_bool CONFIG_CPU_ARM710 y
    define_bool CONFIG_CPU_ARM7TDMI y
    define_bool CONFIG_CPU_32 y
-   define_bool CONFIG_CPU_32v4 y
    define_bool CONFIG_CPU_26 n
    if [ "$CONFIG_NETARM_NS7520" = "y" ]; then
       define_bool CONFIG_CPU_WITH_CACHE n
@@ -466,31 +317,31 @@ if [ "$CONFIG_ARCH_SAMSUNG" = "y" ]; then
         S3C2500-REF-RGP		CONFIG_BOARD_S3C2500REFRGP \
         SMDK2500		CONFIG_BOARD_SMDK2500 \
         S3C4510-SNDS100		CONFIG_BOARD_SNDS100" S3C4510-SNDS100
+fi
 
 if [ "$CONFIG_BOARD_SMDK40100" = "y" ]; then
-       define_string CONFIG_CPU_NAME "S3C3410X"
-       define_bool CONFIG_CPU_S3C3410          y
-       define_bool CONFIG_CPU_ARM710           y
-       define_bool CONFIG_CPU_32v4             y
-       define_bool CONFIG_CPU_32               y
-       define_bool CONFIG_CPU_26               n
-       define_bool CONFIG_NO_PGT_CACHE         y
-       define_bool CONFIG_CPU_WITH_CACHE       y
-       define_bool CONFIG_CPU_WITH_MCR_INSTRUCTION n
-       define_int  CONFIG_ARM_CLK              38852000
-    define_int  CONFIG_FORCE_MAX_ZONEORDER  4
+    define_string CONFIG_CPU_NAME "S3C3410X"
+    define_bool CONFIG_CPU_S3C3410          y
+    define_bool CONFIG_CPU_ARM710           y
+    define_bool CONFIG_CPU_32v4             y
+    define_bool CONFIG_CPU_32               y
+    define_bool CONFIG_CPU_26               n
+    define_bool CONFIG_NO_PGT_CACHE         y
+    define_bool CONFIG_CPU_WITH_CACHE       y
+    define_bool CONFIG_CPU_WITH_MCR_INSTRUCTION n
+    define_int  CONFIG_ARM_CLK              40000000
+    define_bool CONFIG_SERIAL_S3C3410       y
+    define_int  CONFIG_FORCE_MAX_ZONEORDER  5
     if [ "$CONFIG_SET_MEM_PARAM" = "n" ]; then
-       define_hex DRAM_BASE      0x00010000
-       define_hex DRAM_SIZE      0x007F0000
+       define_hex DRAM_BASE      0x00000000
+       define_hex DRAM_SIZE      0x00800000
        define_hex FLASH_MEM_BASE 0x01000000
        define_hex FLASH_SIZE     0x00200000
     fi
-    hex ' FIQ stack size' S3C3410_SIMPLE_FIQ_STACK_SIZE 0x400
-    define_bool CONFIG_CMDLINE_FROM_BOOTLOADER y
 fi
 
 if [ "$CONFIG_BOARD_MBA44" = "y" ]; then
-    define_string CONFIG_CPU_NAME "S3C44B0X"
+    define_string CONFIG_SPU_NAME "S3C44B0X"
     define_bool CONFIG_CPU_S3C44B0X         y
     define_bool CONFIG_CPU_ARM710           y
     define_bool CONFIG_CPU_32v4             y
@@ -499,123 +350,120 @@ if [ "$CONFIG_BOARD_MBA44" = "y" ]; then
     define_bool CONFIG_NO_PGT_CACHE         y
     define_bool CONFIG_CPU_WITH_CACHE       y
     define_bool CONFIG_CPU_WITH_MCR_INSTRUCTION n
-    define_int  CONFIG_ARM_CLK              BOARD_ARM_CLOCK
-    define_int  CONFIG_FORCE_MAX_ZONEORDER  4
+    define_int  CONFIG_ARM_CLK              60000000
+    define_bool CONFIG_SERIAL_S3C44B0X      y
+    define_int  CONFIG_FORCE_MAX_ZONEORDER  5
     if [ "$CONFIG_SET_MEM_PARAM" = "n" ]; then
-       define_hex DRAM_BASE      0x0C010000
-       define_hex DRAM_SIZE      0x007F0000
-       define_hex FLASH_MEM_BASE 0x00000000
-       define_hex FLASH_SIZE     0x00400000
+       define_hex DRAM_BASE      0x00000000
+       define_hex DRAM_SIZE      0x00800000
+       define_hex FLASH_MEM_BASE 0x01000000
+       define_hex FLASH_SIZE     0x00200000
     fi
-    hex ' FIQ stack size' S3C44B0X_SIMPLE_FIQ_STACK_SIZE 0x400 
-    define_bool CONFIG_CMDLINE_FROM_BOOTLOADER y
 fi
 
-   if [ "$CONFIG_BOARD_EVS3C4530HEI" = "y" ]; then
-       define_bool CONFIG_ARCTURUS		y
-       define_string CONFIG_CPU_NAME "S3C4530A01-Q"
-       bool ' Enable uCbootloader support' CONFIG_UCBOOTSTRAP
-       define_bool CONFIG_CPU_S3C4530      y
-       define_bool CONFIG_CPU_ARM710       y
-       define_bool CONFIG_CPU_32           y
-       define_bool CONFIG_CPU_26           n
-       define_bool CONFIG_NO_PGT_CACHE     y
-       define_bool CONFIG_CPU_WITH_CACHE   y
-       define_bool CONFIG_CPU_WITH_MCR_INSTRUCTION n
-       define_int  CONFIG_ARM_CLK          50000000
-       define_hex  DRAM_BASE               0x00000000
-       define_hex  DRAM_SIZE               0x007F0000
-       define_hex  FLASH_MEM_BASE          0x01000000
-       define_hex  FLASH_SIZE              0x00200000
-       define_hex  FLASH1_MEM_BASE         0x01200000
-       define_hex  FLASH1_SIZE             0x00200000
-   fi
+if [ "$CONFIG_BOARD_EVS3C4530HEI" = "y" ]; then
+    define_bool CONFIG_ARCTURUS		y
+    define_string CONFIG_CPU_NAME "S3C4530A01-Q"
+    bool ' Enable uCbootloader support' CONFIG_UCBOOTSTRAP
+    define_bool CONFIG_CPU_S3C4530      y
+    define_bool CONFIG_CPU_ARM710       y
+    define_bool CONFIG_CPU_32           y
+    define_bool CONFIG_CPU_26           n
+    define_bool CONFIG_NO_PGT_CACHE     y
+    define_bool CONFIG_CPU_WITH_CACHE   y
+    define_bool CONFIG_CPU_WITH_MCR_INSTRUCTION n
+    define_int  CONFIG_ARM_CLK          50000000
+    define_hex  DRAM_BASE               0x00000000
+    define_hex  DRAM_SIZE               0x007F0000
+    define_hex  FLASH_MEM_BASE          0x01000000
+    define_hex  FLASH_SIZE              0x00200000
+    define_hex  FLASH1_MEM_BASE         0x01200000
+    define_hex  FLASH1_SIZE             0x00200000
+fi
 
-   if [ "$CONFIG_BOARD_SNDS100" = "y" ]; then
-      define_bool CONFIG_NO_PGT_CACHE y
-      define_bool CONFIG_CPU_32 y
-      define_bool CONFIG_CPU_32v4 y
-      define_bool CONFIG_CPU_26 n
-      define_bool CONFIG_CPU_S3C4510 y
-      define_bool CONFIG_CPU_ARM710 y
-      define_bool CONFIG_CPU_WITH_CACHE y
-      define_bool CONFIG_CPU_WITH_MCR_INSTRUCTION n
-      if [ "$CONFIG_SET_MEM_PARAM" = "n" ]; then
-        define_hex DRAM_BASE 0x00000000
-        define_hex DRAM_SIZE 0x00800000
-        define_hex FLASH_MEM_BASE 0x01000000
-        define_hex FLASH_SIZE 0x00200000
-      fi
-      if [ "$CONFIG_RAMKERNEL" = "y" ]; then
-        bool 'Support ZyXEL BootExtension' CONFIG_ZYXEL_BOOTEXT
-      fi
+if [ "$CONFIG_BOARD_SNDS100" = "y" ]; then
+   define_bool CONFIG_NO_PGT_CACHE y
+   define_bool CONFIG_CPU_32 y
+   define_bool CONFIG_CPU_26 n
+   define_bool CONFIG_CPU_S3C4510 y
+   define_bool CONFIG_CPU_ARM710 y
+   define_bool CONFIG_CPU_WITH_CACHE y
+   define_bool CONFIG_CPU_WITH_MCR_INSTRUCTION n
+   if [ "$CONFIG_SET_MEM_PARAM" = "n" ]; then
+     define_hex DRAM_BASE 0x00000000
+     define_hex DRAM_SIZE 0x00800000
+     define_hex FLASH_MEM_BASE 0x01000000
+     define_hex FLASH_SIZE 0x00200000
    fi
+   if [ "$CONFIG_RAMKERNEL" = "y" ]; then
+     bool 'Support ZyXEL BootExtension' CONFIG_ZYXEL_BOOTEXT
+   fi
+fi
 
-   if [ "$CONFIG_BOARD_SMDK2500" = "y" ]; then
-       define_bool CONFIG_ARCTURUS		y
-       define_string	CONFIG_CPU_NAME "S3C2500"
-       bool ' Enable uCbootloader support' CONFIG_UCBOOTSTRAP
-       define_bool	CONFIG_CPU_S3C2500	y
-       define_bool	CONFIG_CPU_ARM940T 	y
-       define_bool	CONFIG_CPU_32 		y
-       define_bool	CONFIG_CPU_26 		n
-       define_bool	CONFIG_NO_PGT_CACHE 	y
-       define_bool	CONFIG_CPU_WITH_CACHE 	y
-       define_bool	CONFIG_CPU_WITH_MCR_INSTRUCTION y
-       define_hex	DRAM_BASE 		0x00000000
-       define_hex	DRAM_SIZE 		0x02000000
-       define_hex	SRAM_BASE 		0x83000000
-       define_hex	SRAM_SIZE 		0x00100000
-       define_hex	FLASH_MEM_BASE 		0x80000000
-       define_hex	FLASH_SIZE 		0x00080000
-       define_hex	FLASH1_MEM_BASE		0x81000000
-       define_hex	FLASH1_SIZE 		0x00200000
+if [ "$CONFIG_BOARD_SMDK2500" = "y" ]; then
+    define_bool CONFIG_ARCTURUS		y
+    define_string	CONFIG_CPU_NAME "S3C2500"
+    bool ' Enable uCbootloader support' CONFIG_UCBOOTSTRAP
+    define_bool	CONFIG_CPU_S3C2500	y
+    define_bool	CONFIG_CPU_ARM940T 	y
+    define_bool	CONFIG_CPU_32 		y
+    define_bool	CONFIG_CPU_26 		n
+    define_bool	CONFIG_NO_PGT_CACHE 	y
+    define_bool	CONFIG_CPU_WITH_CACHE 	y
+    define_bool	CONFIG_CPU_WITH_MCR_INSTRUCTION y
+    define_hex	DRAM_BASE 		0x00000000
+    define_hex	DRAM_SIZE 		0x02000000
+    define_hex	SRAM_BASE 		0x83000000
+    define_hex	SRAM_SIZE 		0x00100000
+    define_hex	FLASH_MEM_BASE 		0x80000000
+    define_hex	FLASH_SIZE 		0x00080000
+    define_hex	FLASH1_MEM_BASE		0x81000000
+    define_hex	FLASH1_SIZE 		0x00200000
 	    
-       if [ "$CONFIG_UCBOOTSTRAP" != "y" ]; then
-          bool 'Coprocessor futures' CONFIG_CPU_ARM940_COPROCESSOR
-          if [ "$CONFIG_CPU_ARM940_COPROCESSOR" = "y" ] ; then
-	     bool ' Low-power mode' CONFIG_CPU_ARM940_CPU_IDLE
-	     bool ' I-Cache' CONFIG_CPU_ARM940_I_CACHE_ON
-	     bool ' D-Cache' CONFIG_CPU_ARM940_D_CACHE_ON
-	     if [ "$CONFIG_CPU_ARM940_D_CACHE_ON" = "y" ] ; then
-	        bool '  Force write through D-Cache' CONFIG_CPU_ARM940_FORCE_WRITE_THROUGH
-	     fi
-	   fi
-       else 
-	   define_bool CONFIG_CPU_ARM940_CPU_IDLE y
-       fi
-   fi
+    if [ "$CONFIG_UCBOOTSTRAP" != "y" ]; then
+       bool 'Coprocessor futures' CONFIG_CPU_ARM940_COPROCESSOR
+       if [ "$CONFIG_CPU_ARM940_COPROCESSOR" = "y" ] ; then
+	  bool ' Low-power mode' CONFIG_CPU_ARM940_CPU_IDLE
+	  bool ' I-Cache' CONFIG_CPU_ARM940_I_CACHE_ON
+	  bool ' D-Cache' CONFIG_CPU_ARM940_D_CACHE_ON
+	  if [ "$CONFIG_CPU_ARM940_D_CACHE_ON" = "y" ] ; then
+	     bool '  Force write through D-Cache' CONFIG_CPU_ARM940_FORCE_WRITE_THROUGH
+	  fi
+	fi
+    else 
+	define_bool CONFIG_CPU_ARM940_CPU_IDLE y
+    fi
+fi
 
-   if [ "$CONFIG_BOARD_S3C2500REFRGP" = "y" ]; then
-       define_bool CONFIG_ARCTURUS		y
-       define_string	CONFIG_CPU_NAME "S3C2500"
-       bool ' Enable uCbootloader support' CONFIG_UCBOOTSTRAP
-       define_bool	CONFIG_CPU_S3C2500	y
-       define_bool	CONFIG_CPU_ARM940T 	y
-       define_bool	CONFIG_CPU_32 		y
-       define_bool	CONFIG_CPU_26 		n
-       define_bool	CONFIG_NO_PGT_CACHE 	y
-       define_bool	CONFIG_CPU_WITH_CACHE 	y
-       define_bool	CONFIG_CPU_WITH_MCR_INSTRUCTION y
-       define_hex	DRAM_BASE 		0x00000000
-       define_hex	DRAM_SIZE 		0x01000000
-       define_hex	FLASH_MEM_BASE 		0x80000000
-       define_hex	FLASH_SIZE 		0x00400000
+if [ "$CONFIG_BOARD_S3C2500REFRGP" = "y" ]; then
+    define_bool CONFIG_ARCTURUS		y
+    define_string	CONFIG_CPU_NAME "S3C2500"
+    bool ' Enable uCbootloader support' CONFIG_UCBOOTSTRAP
+    define_bool	CONFIG_CPU_S3C2500	y
+    define_bool	CONFIG_CPU_ARM940T 	y
+    define_bool	CONFIG_CPU_32 		y
+    define_bool	CONFIG_CPU_26 		n
+    define_bool	CONFIG_NO_PGT_CACHE 	y
+    define_bool	CONFIG_CPU_WITH_CACHE 	y
+    define_bool	CONFIG_CPU_WITH_MCR_INSTRUCTION y
+    define_hex	DRAM_BASE 		0x00000000
+    define_hex	DRAM_SIZE 		0x01000000
+    define_hex	FLASH_MEM_BASE 		0x80000000
+    define_hex	FLASH_SIZE 		0x00400000
 
-       if [ "$CONFIG_UCBOOTSTRAP" != "y" ]; then
-          bool 'Coprocessor futures' CONFIG_CPU_ARM940_COPROCESSOR
-          if [ "$CONFIG_CPU_ARM940_COPROCESSOR" = "y" ] ; then
-	     bool ' Low-power mode' CONFIG_CPU_ARM940_CPU_IDLE
-	     bool ' I-Cache' CONFIG_CPU_ARM940_I_CACHE_ON
-	     bool ' D-Cache' CONFIG_CPU_ARM940_D_CACHE_ON
-	     if [ "$CONFIG_CPU_ARM940_D_CACHE_ON" = "y" ] ; then
-	        bool '  Force write through D-Cache' CONFIG_CPU_ARM940_FORCE_WRITE_THROUGH
-	     fi
-	   fi
-       else 
-	   define_bool CONFIG_CPU_ARM940_CPU_IDLE y
-       fi
-   fi
+    if [ "$CONFIG_UCBOOTSTRAP" != "y" ]; then
+       bool 'Coprocessor futures' CONFIG_CPU_ARM940_COPROCESSOR
+       if [ "$CONFIG_CPU_ARM940_COPROCESSOR" = "y" ] ; then
+	  bool ' Low-power mode' CONFIG_CPU_ARM940_CPU_IDLE
+	  bool ' I-Cache' CONFIG_CPU_ARM940_I_CACHE_ON
+	  bool ' D-Cache' CONFIG_CPU_ARM940_D_CACHE_ON
+	  if [ "$CONFIG_CPU_ARM940_D_CACHE_ON" = "y" ] ; then
+	     bool '  Force write through D-Cache' CONFIG_CPU_ARM940_FORCE_WRITE_THROUGH
+	  fi
+	fi
+    else 
+	define_bool CONFIG_CPU_ARM940_CPU_IDLE y
+    fi
 fi
 
 if [ "$CONFIG_ARCH_INTEGRATOR" = "y" ]; then
@@ -636,7 +484,7 @@ if [ "$CONFIG_ARCH_IPOD" = "y" ]; then
    define_bool CONFIG_CPU_ARM7TDMI y
    define_bool CONFIG_CPU_32 y
    define_bool CONFIG_CPU_26 n
-   define_hex DRAM_BASE 0x28000000
+   define_hex DRAM_BASE 0x00000000
    define_hex DRAM_SIZE 0x02000000
    define_hex FLASH_MEM_BASE 0x10000000
    define_hex FLASH_SIZE 0x00100000
@@ -671,61 +519,6 @@ if [ "$CONFIG_ARCH_TA7S" = "y" -o "$CONFIG_ARCH_TA7V" = "y" ]; then
      fi
    fi
 fi
-
-if [ "$CONFIG_ARCH_INL" = "y" ]; then
-   define_bool CONFIG_CPU_32 y
-   define_bool CONFIG_NO_PGT_CACHE y
-   define_bool MAGIC_ROM_PTR y
-   define_bool CONFIG_CPU_WITH_CACHE y
-   define_bool CONFIG_CPU_WITH_MCR_INSTRUCTION y
-
-   comment 'Intersil Specific Settings'
-   bool 'SIDED support' CONFIG_INL_SIDED y
-   bool 'Use ARM9 Memory Protection Unit (MPU)' CONFIG_ARM9_MPU y
-   # FIXME Turn on bzip2 compression and change zImage Textaddress to 0x08400000
-   # so that bunzip2 has enough heap memory. This requires change in the bootloader!!!!
-   bool 'Use bzip2 instead of gzip for kernel compression' CONFIG_KERNEL_COMPRESS_BZIP2 n
-
-   comment 'MAC Controller related settings'
-   choice 'Intersil MAC Chip'	\
-	 " ISL3856-Poldhu		CONFIG_ARCH_POLDHU \
-	   ISL3893			CONFIG_ARCH_ISL3893"
-
-
-   if [ "$CONFIG_ARCH_POLDHU" = "y" ]; then
-      define_bool CONFIG_CPU_ARM940T y
-      bool 'Enable MVC DEBUG device' CONFIG_MVC_DEBUG n
-      dep_bool '  Enable Console on MVC DEBUG device' CONFIG_MVC_DEBUG_CONSOLE $CONFIG_MVC_DEBUG
-      bool 'Test DualBand driver on POLDHU platform?' CONFIG_POLDHU_TEST_DB_DRIVER y
-      bool 'Free WLAN pins for UART' CONFIG_FREE_WLAN_PINS n
-   fi
-
-   if [ "$CONFIG_ARCH_ISL3893" = "y" ]; then
-      define_bool CONFIG_CPU_ARM946T y
-      bool 'Enable MVC DEBUG device' CONFIG_MVC_DEBUG y
-      bool 'Enable PCI device' CONFIG_PCI n
-      dep_bool 'Enable micro AP device module' CONFIG_ISL_UAP $CONFIG_MODULES
-      if [ "$CONFIG_ISL_UAP" = "y" ]; then
-         define_bool CONFIG_ISL_UAP_MOD m
-         define_bool CONFIG_ISIL_UAP y
-      fi
-      dep_bool '  Enable Console on MVC DEBUG device' CONFIG_MVC_DEBUG_CONSOLE $CONFIG_MVC_DEBUG
-	  # bool 'Build for Simulator Environment?' ISL3893_SIMSONLY n
-	  bool 'Standalone Operation (No bootloader or MVC)?' ISL3893_STANDALONE y
-   fi
-
-   hex '  SDRAM Base Address' DRAM_BASE $DRAM_BASE
-   hex '  Compressed Kernel Link Address' CONFIG_ZIMAGE_TEXTADDR 0x00420000
-   bool 'Expert settings?' CONFIG_EXPERT_INL n
-   if [ "$CONFIG_EXPERT_INL" = "y" ]; then
-      int '  Asyncronous Clock Frequency' CONFIG_ARM_CLK 88000000 44000000 160000000
-      int '  Syncronous Clock Frequency' CONFIG_A_O_CLK 88000000 44000000 160000000
-   else
-      define_int CONFIG_ARM_CLK 88000000
-      define_int CONFIG_A_O_CLK 88000000
-   fi
-fi
-
 endmenu
 
 #------------------------------------------------------------------------------
@@ -767,9 +560,8 @@ if [ "$CONFIG_ARCH_EBSA110" = "y" -o \
      "$CONFIG_ARCH_PERSONAL_SERVER" = "y" -o \
      "$CONFIG_ARCH_CATS" = "y" -o \
      "$CONFIG_ARCH_ATMEL" = "y" -o \
-	 "$CONFIG_ARCH_LPC" = "y" -o \
+     "$CONFIG_ARCH_ATMEL" = "y" -o \
      "$CONFIG_ARCH_NETARM" = "y" -o \
-     "$CONFIG_ARCH_DM270" = "y" -o \
      "$CONFIG_ARCH_SAMSUNG" = "y" -o \
      "$CONFIG_ARCH_TA7S" = "y" -o \
      "$CONFIG_ARCH_TA7V" = "y" -o \
@@ -838,6 +630,7 @@ tristate 'ATA/IDE/MFM/RLL support' CONFIG_IDE
 if [ "$CONFIG_IDE" != "n" ]; then
   source drivers/ide/Config.in
 else
+  define_bool CONFIG_BLK_DEV_IDE_MODES n
   define_bool CONFIG_BLK_DEV_HD n
 fi
 endmenu
@@ -906,6 +699,7 @@ if [ "$CONFIG_ARCH_IPOD" = "y" ]; then
    tristate "iPod Audio" CONFIG_AUDIO_IPOD
    tristate "iPod Keypad support" CONFIG_KB_IPOD
    dep_tristate "iPod Remote support" CONFIG_REMOTE_IPOD $CONFIG_INPUT_KEYBDEV
+   dep_tristate "iPod IDE support" CONFIG_IDE_IPOD $CONFIG_BLK_DEV_IDE
    endmenu
 fi
 
@@ -932,9 +726,6 @@ if [ "$CONFIG_EXPERIMENTAL" = "y" ]; then
       if [ "$CONFIG_FOOTBRIDGE" = "y" ]; then
          bool 'Kernel low-level debugging messages via footbridge serial port' CONFIG_DEBUG_DC21285_PORT
       fi
-      if [ "$CONFIG_ARCH_DM270" = "y" ]; then
-         bool 'Kernel low-level debugging messages via UART1 (default UART0)' CONFIG_DEBUG_DM270_UART1
-      fi
    fi
    bool 'Non power-of-2 kernel allocator (EXPERIMENTAL)' CONFIG_CONTIGUOUS_PAGE_ALLOC
    dep_bool '  Include /proc/mem_map' CONFIG_MEM_MAP $CONFIG_CONTIGUOUS_PAGE_ALLOC
@@ -951,9 +742,8 @@ if [ "$CONFIG_EXPERIMENTAL" = "y" ]; then
 	  8192KB	CONFIG_UNCACHED_8192" 1024KB
        fi
      fi
-   fi
-   if [ "$CONFIG_CONTIGUOUS_PAGE_ALLOC" != "y" ]; then
-       bool 'Allow allocating large blocks (> 1MB) of memory' CONFIG_NO_MMU_LARGE_ALLOCS
+   else
+     bool 'Allow allocating large blocks (> 1MB) of memory' CONFIG_NO_MMU_LARGE_ALLOCS
    fi
 fi
 

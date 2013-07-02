@@ -148,7 +148,7 @@ ifeq ($(CONFIG_ARCH_CX821XX),y)
 MACHINE		= cx821xx
 TEXTADDR	= 0x800000
 CFLAGS		+= -DNO_MM -DMAGIC_ROM_PTR
-#LINKFLAGS	+= -T arch/armnommu/mach-$(MACHINE)/ramlinux.lds
+LINKFLAGS	+= -T arch/armnommu/mach-$(MACHINE)/ramlinux.lds
 endif
 
 ifeq ($(CONFIG_ARCH_SPIPE),y)
@@ -159,21 +159,6 @@ endif
 ifeq ($(CONFIG_ARCH_ATMEL),y)
 TEXTADDR	= 0x1000000
 MACHINE		= atmel
-endif
-
-ifeq ($(CONFIG_ARCH_WINBOND),y)
-TEXTADDR	= 0x8000
-MACHINE		= W90N740
-endif
-
-ifeq ($(CONFIG_ARCH_LPC), y)
-TEXTADDR = 0x81008000
-MACHINE = lpc
-endif
-
-ifeq ($(CONFIG_MACH_EB67XDIP),y)
-TEXTADDR	= 0x00008000
-MACHINE		= okim67x
 endif
 
 ifeq ($(CONFIG_ARCH_NETARM),y)
@@ -260,39 +245,13 @@ INCDIR           = $(MACHINE)
 CORE_FILES	:= $(CORE_FILES) romfs.o
 endif
 
-ifeq ($(CONFIG_ARCH_VC547X), y)
-TEXTADDR	= 0x10000000
-MACHINE         = vc547x
-endif
-
-ifeq ($(CONFIG_MACH_UC5471DSP), y)
-TEXTADDR	= 0x10020000
-MACHINE         = uc5471dsp
-endif
-
-ifeq ($(CONFIG_MACH_SJ5471ENG), y)
-TEXTADDR	= 0x10020000
-MACHINE         = sj5471eng
-endif
-
-ifeq ($(CONFIG_ARCH_DM270), y)
-TEXTADDR	= 0x01230000
-MACHINE		= dm270
-endif
-
-ifeq ($(CONFIG_ARCH_POLDHU),y)
-TEXTADDR	= 0x08040000
-MACHINE		= poldhu
-endif
-                                                                                
-ifeq ($(CONFIG_ARCH_ISL3893),y)
-TEXTADDR	= 0x00040000
-MACHINE		= isl3893
+ifeq ($(CONFIG_ARCH_C5471), y)
+MACHINE         = c5471
 endif
 
 ifeq ($(CONFIG_ARCH_IPOD),y)
 MACHINE		 = ipod
-TEXTADDR	 = 0x28008000
+TEXTADDR	 = 0x00008000
 endif
 
 export	LDFLAGS LIBGCC MACHINE PROCESSOR TEXTADDR GZFLAGS
@@ -314,8 +273,8 @@ HEAD		:= arch/armnommu/kernel/head-$(PROCESSOR).o
 ifeq ($(CONFIG_ARCH_DSC21),y)
 HEAD		:= arch/armnommu/kernel/head-arm-dsc21.o
 endif
-ifeq ($(CONFIG_ARCH_VC547X),y)
-HEAD		:= arch/armnommu/kernel/head-arm-vc547x.o
+ifeq ($(CONFIG_ARCH_C5471),y)
+HEAD		:= arch/armnommu/kernel/head-arm-c5471.o
 endif
 HEAD		+= arch/armnommu/kernel/init_task.o
 
@@ -325,11 +284,6 @@ LIBS		:= arch/armnommu/lib/lib.a $(LIBS) $(LIBGCC)
 
 ifeq ($(CONFIG_NWFPE),y)
 LIBS		:= arch/armnommu/nwfpe/math-emu.o $(LIBS)
-endif
-
-ifeq ($(findstring y,$(CONFIG_USB_OHCI_SA1111) $(CONFIG_USB_OHCI_AT91) $(CONFIG_USB_OHCI_EP93XX) $(CONFIG_USB_OHCI_WINBOND)),y)
-   SUBDIRS	+=arch/armnommu/common
-   CORE_FILES	+=arch/armnommu/common/nopci.o
 endif
 
 ifeq ($(CONFIG_ARCH_CLPS7500),y)
@@ -378,9 +332,8 @@ ifeq ($(CONFIG_ARCH_DSC21),y)
 	@sed 's/DATAADDR/$(DATAADDR)/' <tmp.ld >$@
 	$(RM) tmp.ld
 else
-ifeq ($(CONFIG_ARCH_VC547X),y)
-#HK:	@sed 's/TEXTADDR/$(FLASH_MEM_BASE)/;s/DATAADDR/$(DRAM_BASE)/' <$< >$@
-	@sed 's/TEXTADDR/$(TEXTADDR)/;s/DATAADDR/$(DRAM_BASE)/' <$< >$@
+ifeq ($(CONFIG_ARCH_C5471),y)
+	@sed 's/TEXTADDR/$(FLASH_MEM_BASE)/;s/DATAADDR/$(DRAM_BASE)/' <$< >$@
 else
 	@sed 's/TEXTADDR/$(TEXTADDR)/' <$< >$@
 endif
@@ -405,7 +358,7 @@ MRPROPER_FILES	+= \
 archmrproper:
 	@/bin/true
 
-archclean: clean_linux_bin
+archclean:
 	@$(MAKEBOOT) clean
 
 archdep: scripts/mkdep archsymlinks
@@ -427,14 +380,6 @@ else
 checkbin:
 	@true
 endif
-
-linux.bin: linux
-	 $(CROSS_COMPILE)objcopy -O binary linux linux.bin
-
-clean_linux_bin:
-	 if [ -f linux.bin ]; then \
-	    $(RM) linux.bin; \
-	 fi;
 
 # My testing targets (that short circuit a few dependencies)
 zImg:;	@$(MAKEBOOT) zImage
