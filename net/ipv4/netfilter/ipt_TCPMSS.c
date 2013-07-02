@@ -45,7 +45,7 @@ ipt_tcpmss_target(struct sk_buff **pskb,
 	const struct ipt_tcpmss_info *tcpmssinfo = targinfo;
 	struct tcphdr *tcph;
 	struct iphdr *iph;
-	u_int16_t tcplen, newtotlen, oldval, newmss;
+	u_int16_t tcplen, newtotlen, oldval, newmss, mtu;
 	unsigned int i;
 	u_int8_t *opt;
 
@@ -54,7 +54,7 @@ ipt_tcpmss_target(struct sk_buff **pskb,
 	if (skb_cloned(*pskb) && !(*pskb)->sk) {
 		struct sk_buff *nskb = skb_copy(*pskb, GFP_ATOMIC);
 		if (!nskb)
-			return NF_DROP;
+			return IPT_CONTINUE;
 		kfree_skb(*pskb);
 		*pskb = nskb;
 	}
@@ -74,7 +74,7 @@ ipt_tcpmss_target(struct sk_buff **pskb,
 			printk(KERN_ERR
 			       "ipt_tcpmss_target: bad length (%d bytes)\n",
 			       (*pskb)->len);
-		return NF_DROP;
+		return IPT_CONTINUE;
 	}
 
 	if(tcpmssinfo->mss == IPT_TCPMSS_CLAMP_PMTU) {
@@ -82,17 +82,29 @@ ipt_tcpmss_target(struct sk_buff **pskb,
 			if (net_ratelimit())
 				printk(KERN_ERR
 			       		"ipt_tcpmss_target: no dst?! can't determine path-MTU\n");
-			return NF_DROP; /* or IPT_CONTINUE ?? */
+			return IPT_CONTINUE;
 		}
 
 		if((*pskb)->dst->pmtu <= (sizeof(struct iphdr) + sizeof(struct tcphdr))) {
 			if (net_ratelimit())
 				printk(KERN_ERR
 		       			"ipt_tcpmss_target: unknown or invalid path-MTU (%d)\n", (*pskb)->dst->pmtu);
-			return NF_DROP; /* or IPT_CONTINUE ?? */
+			return IPT_CONTINUE;
+		}
+		mtu = (*pskb)->dst->pmtu;
+
+		if (in) {
+			if (in->mtu <= (sizeof(struct iphdr) + sizeof(struct tcphdr))) {
+				if (net_ratelimit())
+					printk(KERN_ERR
+		       				"ipt_tcpmss_target: invalid interface MTU (%d)\n", in->mtu);
+				return IPT_CONTINUE;
+			}
+			if (in->mtu < mtu)
+				mtu = in->mtu;
 		}
 
-		newmss = (*pskb)->dst->pmtu - sizeof(struct iphdr) - sizeof(struct tcphdr);
+		newmss = mtu - sizeof(struct iphdr) - sizeof(struct tcphdr);
 	} else
 		newmss = tcpmssinfo->mss;
 
@@ -140,7 +152,7 @@ ipt_tcpmss_target(struct sk_buff **pskb,
 			if (net_ratelimit())
 				printk(KERN_ERR "ipt_tcpmss_target:"
 				       " unable to allocate larger skb\n");
-			return NF_DROP;
+			return IPT_CONTINUE;
 		}
 
 		kfree_skb(*pskb);
